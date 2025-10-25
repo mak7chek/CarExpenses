@@ -1,0 +1,7 @@
+/build
+/captures
+.gradle
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.hprof
