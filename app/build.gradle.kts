@@ -12,6 +12,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -51,7 +53,9 @@ android {
 }
 
 dependencies {
-
+    val room_VERSION = "2.8.3"
+    implementation("androidx.room:room-runtime:$room_VERSION")
+    implementation("androidx.room:room-ktx:$room_VERSION")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -67,13 +71,23 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging.interceptor)
 
     implementation(libs.maps.compose)
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation(libs.play.services.location)
 
-    // ViewModel KTX (для viewModelScope у корутинах)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    ksp("androidx.room:room-compiler:$room_VERSION")
+
+    implementation("com.google.dagger:hilt-android:2.57.1")
+    ksp("com.google.dagger:hilt-android-compiler:2.57.1")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }
