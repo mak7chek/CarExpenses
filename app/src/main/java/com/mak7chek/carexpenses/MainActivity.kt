@@ -15,11 +15,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.mak7chek.carexpenses.ui.navigation.Routes
+import com.mak7chek.carexpenses.ui.screens.MainScreen
 import com.mak7chek.carexpenses.ui.screens.auth.AuthScreen
+import com.mak7chek.carexpenses.ui.screens.vehicles.AddVehicleScreen
 import com.mak7chek.carexpenses.ui.theme.CarExpensesTheme
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.internal.lifecycle.DefaultViewModelFactories_InternalFactoryFactory_Factory
@@ -52,7 +56,20 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(route = Routes.MAIN){
-                            PlaceholderMainScreen()
+                            MainScreen(navController=navController)
+                        }
+
+                        composable(route = Routes.ADD_VEHICLE){
+                            AddVehicleScreen(navController = navController)
+                        }
+
+                        composable(
+                            route = Routes.EDIT_VEHICLE,
+                            arguments = listOf(navArgument("vehicleId"){
+                                type = NavType.LongType
+                            })
+                        ){
+                            EditVehicleScreen(navController = navController)
                         }
 
                     }
@@ -63,17 +80,3 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun PlaceholderMainScreen(){
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ){
-        Text(
-            text = "вітаю",
-            style = MaterialTheme.typography.headlineSmall,
-
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
-}

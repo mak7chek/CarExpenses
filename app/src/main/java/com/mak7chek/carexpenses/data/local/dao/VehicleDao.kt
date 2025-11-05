@@ -15,4 +15,7 @@ interface VehicleDao {
 
     @Query("DELETE FROM vehicles")
     suspend fun clearAll()
+
+    @Query("SELECT * FROM vehicles WHERE id = :id ")
+    fun getVehicleById(id : Long):Flow<VehicleEntity?>
 }

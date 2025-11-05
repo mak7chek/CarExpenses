@@ -65,6 +65,24 @@ class VehicleRepository @Inject constructor(
             e.printStackTrace()
         }
     }
+    suspend fun deleteVehicle(id: Long) {
+        try {
+            apiService.deleteVehicle(id)
+            refreshVehicles()
 
-    // ... Тут можна додати deleteVehicle, updateVehicle за схожим принципом
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+    fun getVehicleById(id: Long): Flow<VehicleEntity?> {
+        return vehicleDao.getVehicleById(id)
+    }
+    suspend fun updateVehicle(id: Long, request: VehicleRequest) {
+        try {
+            apiService.updateVehicle(id, request)
+            refreshVehicles()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }
