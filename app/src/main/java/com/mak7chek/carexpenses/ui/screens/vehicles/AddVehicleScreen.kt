@@ -68,11 +68,21 @@ fun AddVehicleScreen(
             if (uiState.isLoading) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
-
+            OutlinedTextField(
+                value = uiState.name,
+                onValueChange = viewModel::onNameChange,
+                label = { Text("Вкажіть ім'я авто") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Next
+                )
+            )
             OutlinedTextField(
                 value = uiState.make,
                 onValueChange = viewModel::onMakeChange,
-                label = { Text("Марка (напр. Volkswagen)") },
+                label = { Text("Марка авто") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
@@ -84,7 +94,7 @@ fun AddVehicleScreen(
             OutlinedTextField(
                 value = uiState.model,
                 onValueChange = viewModel::onModelChange,
-                label = { Text("Модель (напр. Passat B8)") },
+                label = { Text("Модель") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
@@ -101,6 +111,17 @@ fun AddVehicleScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next
+                )
+            )
+            OutlinedTextField(
+                value = uiState.avgConsumptionLitersPer100Km,
+                onValueChange = viewModel::onAvgConsumptionLitersPer100KmChange,
+                label = { Text("Розхід палива") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
                     imeAction = ImeAction.Done
                 )
             )

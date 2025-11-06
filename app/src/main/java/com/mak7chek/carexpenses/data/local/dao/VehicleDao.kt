@@ -17,5 +17,12 @@ interface VehicleDao {
     suspend fun clearAll()
 
     @Query("SELECT * FROM vehicles WHERE id = :id ")
-    fun getVehicleById(id : Long):Flow<VehicleEntity?>
+    fun getVehicleById(id: Long): Flow<VehicleEntity?>
+
+    @Transaction
+    suspend fun clearAndInsert(vehicles: List<VehicleEntity>) {
+
+        clearAll()
+        insertAll(vehicles)
+    }
 }

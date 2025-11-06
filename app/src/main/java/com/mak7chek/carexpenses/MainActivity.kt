@@ -24,6 +24,8 @@ import com.mak7chek.carexpenses.ui.navigation.Routes
 import com.mak7chek.carexpenses.ui.screens.MainScreen
 import com.mak7chek.carexpenses.ui.screens.auth.AuthScreen
 import com.mak7chek.carexpenses.ui.screens.vehicles.AddVehicleScreen
+import com.mak7chek.carexpenses.ui.screens.vehicles.EditVehicleScreen
+import com.mak7chek.carexpenses.ui.splash.SplashScreen
 import com.mak7chek.carexpenses.ui.theme.CarExpensesTheme
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.internal.lifecycle.DefaultViewModelFactories_InternalFactoryFactory_Factory
@@ -42,8 +44,22 @@ class MainActivity : ComponentActivity() {
 
                     NavHost(
                         navController = navController,
-                        startDestination = Routes.AUTH
+                        startDestination = Routes.SPLASH
                     ){
+                        composable(route = Routes.SPLASH) {
+                            SplashScreen(
+                                onNavigateToAuth = {
+                                    navController.navigate(Routes.AUTH) {
+                                        popUpTo(Routes.SPLASH) { inclusive = true }
+                                    }
+                                },
+                                onNavigateToMain = {
+                                    navController.navigate(Routes.MAIN) {
+                                        popUpTo(Routes.SPLASH) { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
                         composable(route = Routes.AUTH){
                             AuthScreen(
                                 onNavigateToHome = {
@@ -56,7 +72,13 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(route = Routes.MAIN){
-                            MainScreen(navController=navController)
+                            MainScreen(navController=navController,
+                                onNavigateToAuth = {
+                                    navController.navigate(Routes.AUTH) {
+                                        popUpTo(Routes.MAIN) { inclusive = true }
+                                    }
+                                }
+                            )
                         }
 
                         composable(route = Routes.ADD_VEHICLE){

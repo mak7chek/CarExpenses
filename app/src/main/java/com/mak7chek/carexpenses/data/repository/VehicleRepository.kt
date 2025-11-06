@@ -36,18 +36,18 @@ class VehicleRepository @Inject constructor(
             val vehicleEntities = networkVehicles.map { response ->
                 VehicleEntity(
                     id = response.id,
+                    name = response.name,
                     make = response.make,
                     model = response.model,
-                    year = response.year
+                    year = response.year,
+                    avgConsumptionLitersPer100Km = response.avgConsumptionLitersPer100Km
                 )
             }
 
-            // 3. Кладемо в "гаманець" (Room).
-            // OnConflictStrategy.REPLACE оновить існуючі.
-            vehicleDao.insertAll(vehicleEntities)
+
+            vehicleDao.clearAndInsert(vehicleEntities)
 
         } catch (e: Exception) {
-            // Обробити помилку (наприклад, немає інтернету)
             e.printStackTrace()
         }
     }
@@ -57,9 +57,7 @@ class VehicleRepository @Inject constructor(
      */
     suspend fun createVehicle(request: VehicleRequest) {
         try {
-            // 1. Сказати "банку", що ми створили нове авто
             apiService.createVehicle(request)
-            // 2. Після успішного створення, оновити наш "гаманець"
             refreshVehicles()
         } catch (e: Exception) {
             e.printStackTrace()

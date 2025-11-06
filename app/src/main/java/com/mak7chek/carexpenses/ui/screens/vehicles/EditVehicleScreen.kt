@@ -68,7 +68,17 @@ fun EditVehicleScreen(
             if (uiState.isLoading) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
-
+            OutlinedTextField(
+                value = uiState.name,
+                onValueChange = viewModel::onNameChange,
+                label = { Text("Ім'я авто") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Next
+                )
+            )
             OutlinedTextField(
                 value = uiState.make,
                 onValueChange = viewModel::onMakeChange,
@@ -101,6 +111,18 @@ fun EditVehicleScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next
+                )
+            )
+            OutlinedTextField(
+                value = uiState.avgConsumptionLitersPer100Km,
+                onValueChange = viewModel::onAvgConsumptionLitersPer100KmChange,
+                label = { Text("Середній розхід (л/100км)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                placeholder = { Text("напр. 8.5") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
                     imeAction = ImeAction.Done
                 )
             )

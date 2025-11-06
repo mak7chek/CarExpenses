@@ -2,21 +2,21 @@ package com.mak7chek.carexpenses.data.repository
 
 import com.mak7chek.carexpenses.data.local.SessionManager
 import com.mak7chek.carexpenses.data.dto.AuthRequest
+import com.mak7chek.carexpenses.data.local.dao.TripDao
+import com.mak7chek.carexpenses.data.local.dao.VehicleDao
 import com.mak7chek.carexpenses.data.network.ApiService
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AuthRepository @Inject constructor(
     private val apiService: ApiService,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val vehicleDao: VehicleDao,
+    private val tripDao: TripDao
 ) {
 
-    /**
-     * Спробувати залогінитись.
-     * Якщо успішно - зберегти токен.
-     * @return true, якщо успіх, false, якщо ні.
-     */
     suspend fun login(request: AuthRequest): Boolean {
         return try {
             val response = apiService.login(request)
@@ -28,11 +28,6 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    /**
-     * Спробувати зареєструватись.
-     * Якщо успішно - зберегти токен.
-     * @return true, якщо успіх, false, якщо ні.
-     */
     suspend fun register(request: AuthRequest): Boolean {
         return try {
             val response = apiService.register(request)
@@ -43,13 +38,12 @@ class AuthRepository @Inject constructor(
             false
         }
     }
-
-    /**
-     * Вийти з акаунту.
-     */
+    fun checkCurrentToken(): Flow<String?> {
+        return sessionManager.getAuthToken()
+    }
     suspend fun logout() {
         sessionManager.clearAuthToken()
-        // Тут також можна очистити Room бази
-        // (наприклад, vehicleDao.clearAll(), tripDao.clearAll())
+        vehicleDao.clearAll()
+        tripDao.clearAll()
     }
 }

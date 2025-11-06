@@ -1,6 +1,7 @@
 // ui/screens/vehicles/EditVehicleViewModel.kt
 package com.mak7chek.carexpenses.ui.screens.vehicles
 
+import androidx.compose.animation.core.animateValueAsState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -35,14 +36,15 @@ class EditVehicleViewModel @Inject constructor(
 
     private fun loadVehicleData() {
         viewModelScope.launch {
-            // 3. Беремо дані з Room (який є кешем)
             vehicleRepository.getVehicleById(vehicleId).collect { vehicle ->
                 if (vehicle != null) {
                     _uiState.update {
                         it.copy(
+                            name = vehicle.name,
                             make = vehicle.make,
                             model = vehicle.model,
-                            year = vehicle.year.toString()
+                            year = vehicle.year.toString(),
+                            avgConsumptionLitersPer100Km = vehicle.avgConsumptionLitersPer100Km.toString()
                         )
                     }
                 }
@@ -61,6 +63,14 @@ class EditVehicleViewModel @Inject constructor(
     fun onYearChange(year: String) {
         _uiState.update { it.copy(year = year, errorMessage = null) }
     }
+    fun onNameChange(name: String) {
+        _uiState.update { it.copy(name= name, errorMessage = null) }
+    }
+    fun onAvgConsumptionLitersPer100KmChange(value: String) {
+        if (value.count { it == ',' } <= 0) {
+            _uiState.update { it.copy(avgConsumptionLitersPer100Km = value, errorMessage = null) }
+        }
+    }
 
 
     fun onSaveClick() {
@@ -70,21 +80,32 @@ class EditVehicleViewModel @Inject constructor(
             _uiState.update { it.copy(errorMessage = "Всі поля мають бути заповнені") }
             return
         }
+        if (state.name.isBlank() || state.make.isBlank() || state.model.isBlank() ||
+            state.year.isBlank() || state.avgConsumptionLitersPer100Km.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Всі поля мають бути заповнені") }
+            return
+        }
 
         val yearInt = state.year.toIntOrNull()
         val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
 
         if (yearInt == null || yearInt < 1900 || yearInt > currentYear) {
-            _uiState.update { it.copy(errorMessage = "Введіть коректний рік (напр. 2015)") }
+            _uiState.update { it.copy(errorMessage = "Введіть коректний рік") }
             return
         }
-
+        val avgConsumption = state.avgConsumptionLitersPer100Km.toDoubleOrNull()
+        if (avgConsumption == null || avgConsumption <= 0.0) {
+            _uiState.update { it.copy(errorMessage = "Введіть розхід)") }
+            return
+        }
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         val request = VehicleRequest(
+            name = state.name.trim(),
             make = state.make.trim(),
             model = state.model.trim(),
-            year = yearInt
+            year = yearInt,
+            avgConsumptionLitersPer100Km = avgConsumption
         )
 
         viewModelScope.launch {
