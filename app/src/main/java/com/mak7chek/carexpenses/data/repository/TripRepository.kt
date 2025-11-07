@@ -17,14 +17,9 @@ class TripRepository @Inject constructor(
     private val tripDao: TripDao
 ) {
 
-    /**
-     * ГОЛОВНИЙ ПОТІК ДАНИХ (ЖУРНАЛ) ДЛЯ UI.
-     */
     val allTrips: Flow<List<TripEntity>> = tripDao.getAllTrips()
 
-    /**
-     * Примусово оновити журнал поїздок з бекенду.
-     */
+
     suspend fun refreshTrips() {
         try {
             val networkTrips = apiService.getAllTrips()
@@ -33,17 +28,13 @@ class TripRepository @Inject constructor(
                 response.toEntity()
             }
 
-            tripDao.insertAll(tripEntities)
+            tripDao.clearAndInsert(tripEntities)
 
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    /**
-     * Почати нову поїздку.
-     * @return Повертає TripResponse, бо нам потрібен tripId для трекінгу.
-     */
     suspend fun startTrip(vehicleId: Long): TripResponse? {
         return try {
             val request = TripStartRequest(vehicleId)
@@ -65,8 +56,6 @@ class TripRepository @Inject constructor(
         try {
             apiService.trackTrip(tripId, batch)
         } catch (e: Exception) {
-            // Помилка. Можливо, варто зберегти "пачку" локально і
-            // спробувати відправити пізніше (це вже складніша логіка)
             e.printStackTrace()
         }
     }
@@ -105,10 +94,6 @@ class TripRepository @Inject constructor(
     }
 }
 
-/**
- * Проста функція-маппер, щоб не дублювати код.
- * Конвертує мережеву модель (DTO) у локальну (Entity).
- */
 private fun TripResponse.toEntity(): TripEntity {
     return TripEntity(
         id = this.id,
@@ -116,6 +101,6 @@ private fun TripResponse.toEntity(): TripEntity {
         endTime = this.endTime,
         totalDistanceKm = this.totalDistanceKm,
         totalFuelConsumedL = this.totalFuelConsumedL,
-        vehicleId = this.vehicle.id
+        vehicleId = this.vehicleId
     )
 }

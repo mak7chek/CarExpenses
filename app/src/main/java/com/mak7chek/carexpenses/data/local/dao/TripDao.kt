@@ -19,4 +19,10 @@ interface TripDao {
 
     @Query("DELETE FROM trips")
     suspend fun clearAll()
+
+    @Transaction
+    suspend fun clearAndInsert(trips: List<TripEntity>) {
+        clearAll()
+        insertAll(trips)
+    }
 }

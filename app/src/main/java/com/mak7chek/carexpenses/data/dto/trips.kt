@@ -29,6 +29,7 @@ data class TripResponse(
     val endTime: String?,
     val totalDistanceKm: Double?,
     val totalFuelConsumedL: Double?,
-    val vehicle: VehicleResponse,
+    val vehicleId: Long,
+    val vehicleName: String,
     val routePoints: List<LocationPointResponse>
 )

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
+import com.mak7chek.carexpenses.util.JwtDecoderUtil
 enum class AuthState {
     LOADING,
     AUTHENTICATED,
@@ -19,7 +19,8 @@ enum class AuthState {
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val jwtDecoderUtil: JwtDecoderUtil
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow(AuthState.LOADING)
@@ -35,12 +36,13 @@ class SplashViewModel @Inject constructor(
 
             if (token.isNullOrBlank()) {
                 _authState.value = AuthState.UNAUTHENTICATED
-            } else {
-                // TODO: В ідеалі, тут треба зробити 1 запит до API,
-                // щоб перевірити, чи токен не "протух".
-                // Але поки що, якщо токен *є*, вважаємо, що все добре.
-                _authState.value = AuthState.AUTHENTICATED
-            }
+            }else if (jwtDecoderUtil.isTokenExpired(token)) {
+                    authRepository.logout()
+                    _authState.value = AuthState.UNAUTHENTICATED
+                } else {
+                    _authState.value = AuthState.AUTHENTICATED
+                }
+
         }
     }
 }

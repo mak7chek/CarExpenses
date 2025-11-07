@@ -27,6 +27,6 @@ sealed class BottomNavItem(
     )
     object Settings : BottomNavItem(
         route = "settings",
-        label = "Налаш.", // Коротко, щоб влізло
+        label = "Налашт...",
         iconResId = R.drawable.ic_settings_custom)
 }
