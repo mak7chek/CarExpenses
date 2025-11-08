@@ -92,6 +92,14 @@ class TripRepository @Inject constructor(
             null
         }
     }
+    suspend fun delete(tripId:Long ){
+        return try{
+            apiService.deleteTrip(tripId)
+            refreshTrips()
+        }catch(e: Exception){
+            e.printStackTrace()
+        }
+    }
 }
 
 private fun TripResponse.toEntity(): TripEntity {

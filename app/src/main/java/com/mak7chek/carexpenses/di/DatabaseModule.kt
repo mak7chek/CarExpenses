@@ -3,6 +3,7 @@ package com.mak7chek.carexpenses.di
 import android.content.Context
 import androidx.room.Room
 import com.mak7chek.carexpenses.data.local.AppDatabase
+import com.mak7chek.carexpenses.data.local.dao.LocalGpsPointsDao
 import com.mak7chek.carexpenses.data.local.dao.TripDao
 import com.mak7chek.carexpenses.data.local.dao.VehicleDao
 import dagger.Module
@@ -40,5 +41,12 @@ object DatabaseModule {
     @Singleton
     fun provideTripDao(appDatabase: AppDatabase): TripDao {
         return appDatabase.tripDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocalPointDao(appDatabase: AppDatabase): LocalGpsPointsDao
+    {
+        return appDatabase.localGpsPointDao()
     }
 }

@@ -18,12 +18,10 @@ class AuthInterceptor @Inject constructor(
             sessionManager.getAuthToken().firstOrNull()
         }
 
-        // Якщо це запит на /auth, токен не потрібен
         if (originalRequest.url.encodedPath.contains("/auth/")) {
             return chain.proceed(originalRequest)
         }
 
-        // Якщо токен є, додаємо заголовок
         val newRequestBuilder = originalRequest.newBuilder()
         if (token != null) {
             newRequestBuilder.header("Authorization", "Bearer $token")

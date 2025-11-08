@@ -18,17 +18,12 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    // ------------------- !! ВАЖЛИВО !! -------------------
-    // Знайдіть свій IP на Arch Linux (команда: ip a)
-    // і вставте його сюди.
-    private const val BASE_URL = "http://192.168.0.139:8080/"
+    private const val BASE_URL = "https://car-expenses-api.onrender.com/"
     // -----------------------------------------------------
 
     @Provides
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
-        // Цей логгер буде показувати тіла запитів і відповідей у Logcat.
-        // Незамінна річ для дебагінгу.
         return HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
@@ -47,12 +42,12 @@ object NetworkModule {
         authInterceptor: AuthInterceptor
     ): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(authInterceptor) // Додаємо наш "фейс-контроль"
-            .addInterceptor(loggingInterceptor) // Додаємо логгер
+            .addInterceptor(authInterceptor)
+            .addInterceptor(loggingInterceptor)
             .build()
     }
 
-    @Provides
+    @Provides// Додаємо логгер
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()

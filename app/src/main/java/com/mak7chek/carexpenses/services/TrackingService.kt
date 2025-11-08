@@ -5,31 +5,23 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.NotificationCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.Priority
+import com.google.android.gms.location.*
+import com.mak7chek.carexpenses.R
 import com.mak7chek.carexpenses.data.dto.LocationPointRequest
+import com.mak7chek.carexpenses.data.dto.TrackBatchRequest
+import com.mak7chek.carexpenses.data.local.dao.LocalGpsPointsDao
+import com.mak7chek.carexpenses.data.local.entities.LocalGpsPoint
 import com.mak7chek.carexpenses.data.repository.TripRepository
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import javax.inject.Inject
-import com.mak7chek.carexpenses.R
-import com.mak7chek.carexpenses.data.dto.TrackBatchRequest
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
-import android.os.Build
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class TrackingService : Service() {
@@ -40,11 +32,12 @@ class TrackingService : Service() {
     @Inject
     lateinit var tripRepository: TripRepository
 
+    @Inject
+    lateinit var localGpsPointDao: LocalGpsPointsDao
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var locationCallback: LocationCallback
 
     private var currentTripId: Long? = null
-    private val locationBatch = mutableListOf<LocationPointRequest>()
     private var batchJob: Job? = null
 
     companion object {
@@ -61,6 +54,7 @@ class TrackingService : Service() {
         private val _currentLocation = MutableStateFlow<android.location.Location?>(null)
         val currentLocation = _currentLocation.asStateFlow()
     }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -75,13 +69,13 @@ class TrackingService : Service() {
                 }
             }
             ACTION_STOP -> {
-                // (Цей блок вже правильний)
                 serviceScope.launch {
                     stopLocationUpdates()
                     batchJob?.cancel()
-                    sendBatch() // Викликаємо suspend-функцію
 
-                    stopForeground(true)
+                    sendBatch()
+
+                    stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()
                     _isTracking.value = false
                 }
@@ -91,27 +85,30 @@ class TrackingService : Service() {
         return START_NOT_STICKY
     }
 
-    // 4. !!! --- "ЗОМБІ-ФУНКЦІЯ" stopTracking() ВИДАЛЕНА --- !!!
-
 
     private fun startLocationUpdates() {
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
-            TimeUnit.SECONDS.toMillis(10)
+            TimeUnit.SECONDS.toMillis(2)
         ).build()
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 result.lastLocation?.let { location ->
-                    locationBatch.add(
-                        LocationPointRequest(
-                            latitude = location.latitude,
-                            longitude = location.longitude,
-                            timestamp = System.currentTimeMillis()
-                        )
-                    )
-                    // 5. !!! --- ТЕПЕР ТИПИ ЗБІГАЮТЬСЯ --- !!!
                     _currentLocation.value = location
+
+                    currentTripId?.let { tripId ->
+                        serviceScope.launch {
+                            localGpsPointDao.insertPoint(
+                                LocalGpsPoint(
+                                    tripId = tripId,
+                                    latitude = location.latitude,
+                                    longitude = location.longitude,
+                                    timestamp = System.currentTimeMillis()
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -123,9 +120,10 @@ class TrackingService : Service() {
             )
         } catch (e: SecurityException) {
             serviceScope.launch {
-                stopForeground(true)
+                stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 _isTracking.value = false
+                e.printStackTrace()
             }
         }
     }
@@ -147,17 +145,27 @@ class TrackingService : Service() {
     }
 
     private suspend fun sendBatch() {
-        if (locationBatch.isEmpty() || currentTripId == null) {
+        val tripId = currentTripId ?: return
+
+        val pointsToSend = localGpsPointDao.getUnsyncedPointsForTrip(tripId)
+
+        if (pointsToSend.isEmpty()) {
             return
         }
 
-        val batchToSend = TrackBatchRequest(points = ArrayList(locationBatch))
-        locationBatch.clear()
+        val batchRequest = TrackBatchRequest(
+            points = pointsToSend.map {
+                LocationPointRequest(it.latitude, it.longitude, it.timestamp)
+            }
+        )
 
         try {
-            tripRepository.trackTrip(currentTripId!!, batchToSend)
+            tripRepository.trackTrip(tripId, batchRequest)
+
+            val idsToDelete = pointsToSend.map { it.id }
+            localGpsPointDao.deletePointsByIds(idsToDelete)
+
         } catch (e: Exception) {
-            locationBatch.addAll(batchToSend.points)
             e.printStackTrace()
         }
     }

@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mak7chek.carexpenses.ui.navigation.BottomNavItem
+import com.mak7chek.carexpenses.ui.screens.journal.JournalScreen
 import com.mak7chek.carexpenses.ui.screens.map.MapScreen
 import com.mak7chek.carexpenses.ui.screens.settings.SettingsScreen
 import com.mak7chek.carexpenses.ui.screens.vehicles.VehiclesScreen
@@ -72,7 +73,7 @@ fun MainScreen(navController: NavHostController,onNavigateToAuth: () -> Unit) {
             startDestination = BottomNavItem.Journal.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(BottomNavItem.Journal.route) { JournalScreen() }
+            composable(BottomNavItem.Journal.route) { JournalScreen(navController =navController)}
             composable(BottomNavItem.Map.route) { MapScreen() }
             composable(BottomNavItem.Vehicles.route) { VehiclesScreen(navController = navController)}
                 composable(BottomNavItem.Settings.route) {

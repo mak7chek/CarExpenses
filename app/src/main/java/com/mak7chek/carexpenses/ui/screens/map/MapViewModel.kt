@@ -1,4 +1,4 @@
-package com.mak7chek.carexpenses.ui.screens.map // Перевір імпорти
+package com.mak7chek.carexpenses.ui.screens.map
 
 import android.content.Context
 import android.content.Intent
@@ -10,8 +10,10 @@ import com.mak7chek.carexpenses.data.repository.VehicleRepository
 import com.mak7chek.carexpenses.services.TrackingService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableSharedFlow // ІМПОРТ
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow // ІМПОРТ
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -22,7 +24,7 @@ data class MapUiState(
     val vehicles: List<VehicleEntity> = emptyList(),
     val selectedVehicleId: Long? = null,
     val currentTripId: Long? = null,
-    val errorMessage: String? = null // 👈 ДОДАНО ДЛЯ TODO
+    val loadErrorMessage: String? = null
 )
 
 @HiltViewModel
@@ -33,6 +35,9 @@ class MapViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapUiState())
+
+    private val _userMessage = MutableSharedFlow<String>()
+    val userMessage = _userMessage.asSharedFlow()
 
     val isTracking = TrackingService.isTracking
     val currentLocation = TrackingService.currentLocation
@@ -46,15 +51,17 @@ class MapViewModel @Inject constructor(
             selectedVehicleId = state.selectedVehicleId ?: vehicles.firstOrNull()?.id
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MapUiState())
+
     fun onVehicleSelected(vehicleId: Long) {
         _uiState.update { it.copy(selectedVehicleId = vehicleId) }
     }
+
     fun onStartTrip() {
         val vehicleId = uiState.value.selectedVehicleId ?: return
         if (isTracking.value) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(errorMessage = null) }
+            _uiState.update { it.copy(loadErrorMessage = null) }
             try {
                 val newTrip = tripRepository.startTrip(vehicleId)
 
@@ -62,14 +69,15 @@ class MapViewModel @Inject constructor(
                     startTrackingService(newTrip.id)
                     _uiState.update { it.copy(currentTripId = newTrip.id) }
                 } else {
-                    _uiState.update { it.copy(errorMessage = "Не вдалося почати поїздку") }
+                    _userMessage.emit("Не вдалося почати поїздку: невідома помилка")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(errorMessage = "Помилка: ${e.message}") }
+                _userMessage.emit("Помилка при старті поїздки: ${e.message}")
             }
         }
     }
+
     fun onStopTrip() {
         val tripId = uiState.value.currentTripId ?: return
         if (!isTracking.value) return
@@ -82,20 +90,19 @@ class MapViewModel @Inject constructor(
                 _uiState.update { it.copy(currentTripId = null) }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _uiState.update { it.copy(errorMessage = "Не вдалося завершити поїздку") }
+                _userMessage.emit("Не вдалося завершити поїздку: ${e.message}")
             }
         }
     }
-    fun startTrackingService(newTripId:Long){
-        val intent = Intent(context, TrackingService::class.java).apply{
+
+    fun startTrackingService(newTripId: Long) {
+        val intent = Intent(context, TrackingService::class.java).apply {
             action = TrackingService.ACTION_START
-            putExtra(TrackingService.EXTRA_TRIP_ID,newTripId)
+            putExtra(TrackingService.EXTRA_TRIP_ID, newTripId)
         }
         context.startService(intent)
     }
-    fun clearError() {
-        _uiState.update { it.copy(errorMessage = null) }
-    }
+
     private fun stopTrackingService() {
         val intent = Intent(context, TrackingService::class.java).apply {
             action = TrackingService.ACTION_STOP

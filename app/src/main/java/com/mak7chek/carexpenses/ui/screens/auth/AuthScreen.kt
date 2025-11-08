@@ -56,7 +56,7 @@ fun AuthScreen(
                     OutlinedTextField(
                         value = uiState.name ?: "",
                         onValueChange = viewModel::onNameChange,
-                        label = { Text("Ваше ім'я") },
+                        label = { Text("Name") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
@@ -75,7 +75,7 @@ fun AuthScreen(
             OutlinedTextField(
                 value = uiState.email,
                 onValueChange = viewModel::onUsernameChange,
-                label = { Text("email") },
+                label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
@@ -95,10 +95,10 @@ fun AuthScreen(
             OutlinedTextField(
                 value = uiState.password,
                 onValueChange = viewModel::onPasswordChange,
-                label = { Text("Пароль") },
+                label = { Text("Password") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                visualTransformation = PasswordVisualTransformation(), // Ховає пароль
+                visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done
@@ -119,11 +119,10 @@ fun AuthScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // --- Повідомлення про помилку ---
             if (error != null) {
                 Text(
                     text = error,
-                    color = MaterialTheme.colorScheme.error, // Червоний колір з теми
+                    color = MaterialTheme.colorScheme.error,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -131,7 +130,6 @@ fun AuthScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- Головна кнопка (Вхід / Реєстрація) ---
             Button(
                 onClick = {
                     focusManager.clearFocus()

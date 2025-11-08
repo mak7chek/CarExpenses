@@ -6,6 +6,7 @@ import com.mak7chek.carexpenses.data.dto.* import retrofit2.Response
 import retrofit2.http.*
 
 interface ApiService {
+    //--- UserController ---
 
     // --- AuthController ---
     @POST("/auth/register")
@@ -26,7 +27,7 @@ interface ApiService {
 
     @DELETE("/api/vehicles/{id}")
     suspend fun deleteVehicle(@Path("id") id: Long): Response<Unit>
-
+    //---TripController---
     @POST("/api/trips/start")
     suspend fun startTrip(@Body request: TripStartRequest): TripResponse
 

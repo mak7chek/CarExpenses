@@ -23,6 +23,7 @@ import androidx.navigation.navArgument
 import com.mak7chek.carexpenses.ui.navigation.Routes
 import com.mak7chek.carexpenses.ui.screens.MainScreen
 import com.mak7chek.carexpenses.ui.screens.auth.AuthScreen
+import com.mak7chek.carexpenses.ui.screens.journal.TripDetailScreen
 import com.mak7chek.carexpenses.ui.screens.vehicles.AddVehicleScreen
 import com.mak7chek.carexpenses.ui.screens.vehicles.EditVehicleScreen
 import com.mak7chek.carexpenses.ui.splash.SplashScreen
@@ -92,6 +93,14 @@ class MainActivity : ComponentActivity() {
                             })
                         ){
                             EditVehicleScreen(navController = navController)
+                        }
+                        composable(
+                            route = Routes.TRIP_DETAIL,
+                            arguments = listOf(navArgument("tripId") { // Кажемо, що {tripId} - це Long
+                                type = NavType.LongType
+                            })
+                        ) {
+                            TripDetailScreen(navController = navController)
                         }
 
                     }

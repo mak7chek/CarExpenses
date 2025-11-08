@@ -6,16 +6,17 @@ import androidx.lifecycle.viewModelScope
 import com.mak7chek.carexpenses.data.local.entities.TripEntity
 import com.mak7chek.carexpenses.data.repository.TripRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 data class JournalUiState(
     val trips: List<TripEntity> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val loadErrorMessage: String? = null
 )
 
 @HiltViewModel
@@ -25,6 +26,8 @@ class JournalViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(JournalUiState())
     val uiState = _uiState.asStateFlow()
+    private val _userMessage = MutableSharedFlow<String>()
+    val userMessage = _userMessage.asSharedFlow()
 
     init {
         viewModelScope.launch {
@@ -32,13 +35,12 @@ class JournalViewModel @Inject constructor(
                 _uiState.update { it.copy(trips = tripList) }
             }
         }
-
         refreshTrips()
     }
 
     fun refreshTrips() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = true, loadErrorMessage = null) }
             try {
                 tripRepository.refreshTrips()
                 _uiState.update { it.copy(isLoading = false) }
@@ -47,10 +49,23 @@ class JournalViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Не вдалося завантажити журнал"
+                        loadErrorMessage = "Не вдалося завантажити журнал"
                     )
                 }
             }
         }
     }
+
+    fun onTripSwiped(trip: TripEntity) {
+        viewModelScope.launch {
+            try {
+                tripRepository.delete(trip.id)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _userMessage.emit("Не вдалося видалити поїздку")
+            }
+        }
+    }
+
+
 }
