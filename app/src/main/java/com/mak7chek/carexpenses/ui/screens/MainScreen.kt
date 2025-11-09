@@ -1,4 +1,3 @@
-// ui/screens/MainScreen.kt
 package com.mak7chek.carexpenses.ui.screens
 
 import androidx.compose.foundation.layout.padding
@@ -7,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -16,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mak7chek.carexpenses.ui.navigation.BottomNavItem
+import com.mak7chek.carexpenses.ui.navigation.Routes
 import com.mak7chek.carexpenses.ui.screens.journal.JournalScreen
 import com.mak7chek.carexpenses.ui.screens.map.MapScreen
 import com.mak7chek.carexpenses.ui.screens.settings.SettingsScreen
@@ -26,9 +25,9 @@ fun MainScreen(navController: NavHostController,onNavigateToAuth: () -> Unit) {
     val nestedNavController = rememberNavController()
 
     val bottomNavItems = listOf(
-        BottomNavItem.Journal,
         BottomNavItem.Map,
         BottomNavItem.Vehicles,
+        BottomNavItem.Journal,
         BottomNavItem.Settings
     )
 
@@ -53,8 +52,12 @@ fun MainScreen(navController: NavHostController,onNavigateToAuth: () -> Unit) {
                                 restoreState = true
                             }
                         },
-                        icon = { Icon(painter = painterResource(id = screen.iconResId),
-                            contentDescription = screen.label) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(id = screen.iconResId),
+                                contentDescription = screen.label
+                            )
+                        },
                         label = { Text(screen.label) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -70,15 +73,23 @@ fun MainScreen(navController: NavHostController,onNavigateToAuth: () -> Unit) {
     ) { innerPadding ->
         NavHost(
             navController = nestedNavController,
-            startDestination = BottomNavItem.Journal.route,
+            startDestination = BottomNavItem.Map.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(BottomNavItem.Journal.route) { JournalScreen(navController =navController)}
+            composable(BottomNavItem.Journal.route) { JournalScreen(navController = navController) }
             composable(BottomNavItem.Map.route) { MapScreen() }
-            composable(BottomNavItem.Vehicles.route) { VehiclesScreen(navController = navController)}
-                composable(BottomNavItem.Settings.route) {
-                    SettingsScreen(onNavigateToAuth = onNavigateToAuth)
-                }
+            composable(BottomNavItem.Vehicles.route) { VehiclesScreen(navController = navController) }
+            composable(BottomNavItem.Settings.route) {
+                SettingsScreen(
+                    onNavigateToAuth = onNavigateToAuth,
+                    onNavigateToUpdateName = {
+                        navController.navigate(Routes.UPDATE_NAME)
+                    },
+                    onNavigateToUpdatePassword = {
+                        navController.navigate(Routes.UPDATE_PASSWORD)
+                    }
+                )
+            }
         }
     }
 }

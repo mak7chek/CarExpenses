@@ -1,5 +1,5 @@
 // di/NetworkModule.kt
-package com.mak7chek.carexpenses.di // Замініть на ваш пакет
+package com.mak7chek.carexpenses.di
 
 import com.mak7chek.carexpenses.data.local.SessionManager
 import com.mak7chek.carexpenses.data.network.ApiService
@@ -47,13 +47,13 @@ object NetworkModule {
             .build()
     }
 
-    @Provides// Додаємо логгер
+    @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(okHttpClient) // Використовуємо наш кастомний клієнт
-            .addConverterFactory(GsonConverterFactory.create()) // Парсер JSON
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 

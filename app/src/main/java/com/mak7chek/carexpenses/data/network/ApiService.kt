@@ -6,7 +6,22 @@ import com.mak7chek.carexpenses.data.dto.* import retrofit2.Response
 import retrofit2.http.*
 
 interface ApiService {
+
+
     //--- UserController ---
+    @PUT("api/user/name")
+    suspend fun updateName(
+        @Body request: UpdateNameRequest
+    ): Response<Map<String, String>>
+
+    @PUT("api/user/password")
+    suspend fun updatePassword(
+        @Body request: UpdatePasswordRequest
+    ): Response<Map<String, String>>
+
+    @DELETE("api/user/me")
+    suspend fun deleteAccount(): Response<Map<String, String>>
+
 
     // --- AuthController ---
     @POST("/auth/register")

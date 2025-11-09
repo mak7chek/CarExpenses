@@ -17,6 +17,4 @@ object AppModule {
     @Singleton
     fun provideFusedLocationProviderClient(@ApplicationContext context: Context) =
         LocationServices.getFusedLocationProviderClient(context)
-
-    // (Тут також може бути 'provideSessionManager', якщо він не в 'NetworkModule')
 }
