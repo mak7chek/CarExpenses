@@ -14,10 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
-
-/**
- * Стан UI для екрану додавання авто
- */
+import com.mak7chek.carexpenses.ui.model.FuelType
 data class AddVehicleUiState(
     val name: String = "",
     val make: String = "",
@@ -25,7 +22,9 @@ data class AddVehicleUiState(
     val year: String = "",
     val avgConsumptionLitersPer100Km: String = "",
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+
+    val fuelType: FuelType = FuelType.PETROL,
 )
 
 @HiltViewModel
@@ -58,6 +57,9 @@ class AddVehicleViewModel @Inject constructor(
             _uiState.update { it.copy(avgConsumptionLitersPer100Km = value, errorMessage = null) }
         }
     }
+    fun onFuelTypeChange(type: FuelType) {
+        _uiState.update { it.copy(fuelType = type, errorMessage = null) }
+    }
     fun onSaveClick() {
         if (_uiState.value.isLoading) return
 
@@ -84,7 +86,6 @@ class AddVehicleViewModel @Inject constructor(
             _uiState.update { it.copy(errorMessage = "Введіть розхід)") }
             return
         }
-        // --- 2. ДІЯ ---
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         val request = VehicleRequest(
@@ -92,20 +93,20 @@ class AddVehicleViewModel @Inject constructor(
             make = state.make.trim(),
             model = state.model.trim(),
             year = yearInt,
-            avgConsumptionLitersPer100Km = avgConsumption
+            avgConsumptionLitersPer100Km = avgConsumption,
+            fuelType = state.fuelType.name
         )
 
         viewModelScope.launch {
             try {
                 vehicleRepository.createVehicle(request)
-
                 _navigationEvent.emit(Unit)
-
             } catch (e: Exception) {
+                val errorMsg = e.localizedMessage ?: "Невідома помилка"
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Помилка при збереженні. Спробуйте пізніше."
+                        errorMessage = "Помилка збереження: $errorMsg"
                     )
                 }
                 e.printStackTrace()

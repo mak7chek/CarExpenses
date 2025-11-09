@@ -82,12 +82,9 @@ fun MainScreen(navController: NavHostController,onNavigateToAuth: () -> Unit) {
             composable(BottomNavItem.Settings.route) {
                 SettingsScreen(
                     onNavigateToAuth = onNavigateToAuth,
-                    onNavigateToUpdateName = {
-                        navController.navigate(Routes.UPDATE_NAME)
-                    },
-                    onNavigateToUpdatePassword = {
-                        navController.navigate(Routes.UPDATE_PASSWORD)
-                    }
+                    onNavigateToUpdateName = { navController.navigate(Routes.UPDATE_NAME) },
+                    onNavigateToUpdatePassword = { navController.navigate(Routes.UPDATE_PASSWORD) },
+                    onNavigateToFuelPrices = { navController.navigate(Routes.FUEL_PRICES) }
                 )
             }
         }

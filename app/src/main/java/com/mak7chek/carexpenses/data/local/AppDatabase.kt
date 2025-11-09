@@ -12,7 +12,7 @@ import com.mak7chek.carexpenses.data.local.entities.VehicleEntity
 
 @Database(
     entities = [VehicleEntity::class, TripEntity::class, LocalGpsPoint::class],
-    version = 3,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

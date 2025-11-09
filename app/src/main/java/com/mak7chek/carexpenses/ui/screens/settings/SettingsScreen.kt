@@ -32,7 +32,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     onNavigateToAuth: () -> Unit,
     onNavigateToUpdateName: () -> Unit,
-    onNavigateToUpdatePassword: () -> Unit
+    onNavigateToUpdatePassword: () -> Unit,
+    onNavigateToFuelPrices: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -95,7 +96,14 @@ fun SettingsScreen(
                 )
             }
 
-            item { SectionHeader("Вигляд") }
+            item { SectionHeader("Вигляд та Дані") }
+            item {
+                SettingItem(
+                    title = "Ціни на паливо",
+                    subtitle = "Редагувати ваші ціни для розрахунків",
+                    onClick = onNavigateToFuelPrices
+                )
+            }
             item {
                 val themeSubtitle = when (uiState.currentTheme) {
                     ThemeSetting.SYSTEM -> "Як в системі"

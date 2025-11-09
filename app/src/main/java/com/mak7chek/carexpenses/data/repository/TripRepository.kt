@@ -1,6 +1,7 @@
-// data/repository/TripRepository.kt
 package com.mak7chek.carexpenses.data.repository
 
+import com.mak7chek.carexpenses.data.dto.NoteUpdateRequest
+import com.mak7chek.carexpenses.data.dto.TripDetailResponse
 import com.mak7chek.carexpenses.data.local.dao.TripDao
 import com.mak7chek.carexpenses.data.local.entities.TripEntity
 import com.mak7chek.carexpenses.data.dto.TrackBatchRequest
@@ -8,6 +9,7 @@ import com.mak7chek.carexpenses.data.dto.TripResponse
 import com.mak7chek.carexpenses.data.dto.TripStartRequest
 import com.mak7chek.carexpenses.data.network.ApiService
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,32 +18,37 @@ class TripRepository @Inject constructor(
     private val apiService: ApiService,
     private val tripDao: TripDao
 ) {
-
     val allTrips: Flow<List<TripEntity>> = tripDao.getAllTrips()
 
 
-    suspend fun refreshTrips() {
-        try {
-            val networkTrips = apiService.getAllTrips()
 
-            val tripEntities = networkTrips.map { response ->
-                response.toEntity()
-            }
+    suspend fun refreshAndFilterTrips(
+        search: String?,
+        vehicleId: Long?,
+        dateFrom: LocalDate?,
+        dateTo: LocalDate?,
+        minDistance: Double?,
+        maxDistance: Double?
+    ) {
+        val networkTrips = apiService.getAllTrips(
+            search = search,
+            vehicleId = vehicleId,
+            dateFrom = dateFrom?.toString(),
+            dateTo = dateTo?.toString(),
+            minDistance = minDistance,
+            maxDistance = maxDistance
+        )
 
-            tripDao.clearAndInsert(tripEntities)
+        val tripEntities = networkTrips.map { it.toEntity() }
 
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        tripDao.clearAndInsert(tripEntities)
     }
 
     suspend fun startTrip(vehicleId: Long): TripResponse? {
         return try {
             val request = TripStartRequest(vehicleId)
             val newTripResponse = apiService.startTrip(request)
-
             tripDao.insert(newTripResponse.toEntity())
-
             newTripResponse
         } catch (e: Exception) {
             e.printStackTrace()
@@ -60,48 +67,37 @@ class TripRepository @Inject constructor(
         }
     }
 
-    /**
-     * Завершити поїздку.
-     * @return Повертає оновлену поїздку з розрахунками.
-     */
-    suspend fun endTrip(tripId: Long): TripResponse? {
+    suspend fun endTrip(tripId: Long) {
+        apiService.endTrip(tripId)
+
+        refreshAndFilterTrips(null, null, null, null, null, null)
+    }
+
+    suspend fun getTripDetailsFromApi(tripId: Long): Result<TripDetailResponse> {
         return try {
-            val finishedTripResponse = apiService.endTrip(tripId)
-
-            // 4. Оновити поїздку в кеші (Room)
-            // OnConflictStrategy.REPLACE замінить стару на нову.
-            tripDao.insert(finishedTripResponse.toEntity())
-
-            finishedTripResponse
+            val detailResponse = apiService.getTripDetails(tripId)
+            Result.success(detailResponse)
         } catch (e: Exception) {
             e.printStackTrace()
-            null
+            Result.failure(e)
         }
     }
 
-    /**
-     * Отримати деталі 1 поїздки (з routePoints).
-     * Ми НЕ зберігаємо routePoints у кеші (бо їх багато).
-     * Тому цей метод ЗАВЖДИ йде в мережу.
-     */
-    suspend fun getTripDetails(tripId: Long): TripResponse? {
-        return try {
-            apiService.getTripDetails(tripId)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
+    suspend fun updateTripNotes(tripId: Long, notes: String?) {
+        apiService.updateTripNotes(tripId, NoteUpdateRequest(notes))
+        tripDao.updateNotes(tripId, notes)
     }
+
     suspend fun delete(tripId:Long ){
-        return try{
+        try {
             apiService.deleteTrip(tripId)
-            refreshTrips()
-        }catch(e: Exception){
+            tripDao.deleteById(tripId)
+        } catch(e: Exception) {
             e.printStackTrace()
+            throw e
         }
     }
 }
-
 private fun TripResponse.toEntity(): TripEntity {
     return TripEntity(
         id = this.id,
@@ -109,6 +105,8 @@ private fun TripResponse.toEntity(): TripEntity {
         endTime = this.endTime,
         totalDistanceKm = this.totalDistanceKm,
         totalFuelConsumedL = this.totalFuelConsumedL,
-        vehicleId = this.vehicleId
+        vehicleId = this.vehicleId,
+        vehicleName = this.vehicleName,
+        notes = this.notes
     )
 }

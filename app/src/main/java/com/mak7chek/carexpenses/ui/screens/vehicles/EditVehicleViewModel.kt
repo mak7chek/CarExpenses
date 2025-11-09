@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mak7chek.carexpenses.data.dto.VehicleRequest
 import com.mak7chek.carexpenses.data.repository.VehicleRepository
+import com.mak7chek.carexpenses.ui.model.FuelType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import java.util.Calendar
 
 @HiltViewModel
 class EditVehicleViewModel @Inject constructor(
@@ -38,13 +40,23 @@ class EditVehicleViewModel @Inject constructor(
         viewModelScope.launch {
             vehicleRepository.getVehicleById(vehicleId).collect { vehicle ->
                 if (vehicle != null) {
+
+
+                    val loadedFuelType = try {
+
+                        FuelType.valueOf(vehicle.fuelType ?: "PETROL")
+                    } catch (e: Exception) {
+                        FuelType.PETROL
+                    }
+
                     _uiState.update {
                         it.copy(
                             name = vehicle.name,
-                            make = vehicle.make,
-                            model = vehicle.model,
+                            make = vehicle.make ?: "",
+                            model = vehicle.model ?: "",
                             year = vehicle.year.toString(),
-                            avgConsumptionLitersPer100Km = vehicle.avgConsumptionLitersPer100Km.toString()
+                            avgConsumptionLitersPer100Km = vehicle.avgConsumptionLitersPer100Km.toString(),
+                            fuelType = loadedFuelType
                         )
                     }
                 }
@@ -71,7 +83,9 @@ class EditVehicleViewModel @Inject constructor(
             _uiState.update { it.copy(avgConsumptionLitersPer100Km = value, errorMessage = null) }
         }
     }
-
+    fun onFuelTypeChange(type: FuelType) {
+        _uiState.update { it.copy(fuelType = type, errorMessage = null) }
+    }
 
     fun onSaveClick() {
         val state = _uiState.value
@@ -105,7 +119,8 @@ class EditVehicleViewModel @Inject constructor(
             make = state.make.trim(),
             model = state.model.trim(),
             year = yearInt,
-            avgConsumptionLitersPer100Km = avgConsumption
+            avgConsumptionLitersPer100Km = avgConsumption,
+            fuelType = state.fuelType.name
         )
 
         viewModelScope.launch {
@@ -114,10 +129,11 @@ class EditVehicleViewModel @Inject constructor(
                 _navigationEvent.emit(Unit)
             } catch (e: Exception) {
                 e.printStackTrace()
+                val errorMsg = e.localizedMessage ?: "Невідома помилка"
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Помилка збереження. Перевірте мережу."
+                        errorMessage = "Помилка оновлення: $errorMsg"
                     )
                 }
             }

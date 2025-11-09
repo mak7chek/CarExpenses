@@ -7,6 +7,10 @@ import retrofit2.http.*
 
 interface ApiService {
 
+    @GET("api/fuel-prices")
+    suspend fun getFuelPrices(): List<FuelPriceResponse>
+    @POST("api/fuel-prices")
+    suspend fun updateFuelPrices(@Body request: List<FuelPriceUpdateRequest>)
 
     //--- UserController ---
     @PUT("api/user/name")
@@ -42,6 +46,8 @@ interface ApiService {
 
     @DELETE("/api/vehicles/{id}")
     suspend fun deleteVehicle(@Path("id") id: Long): Response<Unit>
+
+
     //---TripController---
     @POST("/api/trips/start")
     suspend fun startTrip(@Body request: TripStartRequest): TripResponse
@@ -53,14 +59,27 @@ interface ApiService {
     ): Response<Unit>
 
     @POST("/api/trips/{id}/end")
-    suspend fun endTrip(@Path("id") tripId: Long): TripResponse
+    suspend fun endTrip(@Path("id") tripId: Long): Response<Map<String, String>>
 
     @GET("/api/trips")
-    suspend fun getAllTrips(): List<TripResponse>
+    suspend fun getAllTrips(
+        @Query("search") search: String?,
+        @Query("vehicleId") vehicleId: Long?,
+        @Query("dateFrom") dateFrom: String?,
+        @Query("dateTo") dateTo: String?,
+        @Query("minDistance") minDistance: Double?,
+        @Query("maxDistance") maxDistance: Double?
+    ): List<TripResponse>
 
     @GET("/api/trips/{id}")
-    suspend fun getTripDetails(@Path("id") tripId: Long): TripResponse
+    suspend fun getTripDetails(@Path("id") tripId: Long): TripDetailResponse
 
     @DELETE("/api/trips/{id}")
     suspend fun deleteTrip(@Path("id") tripId: Long): Response<Unit>
+
+    @PUT("/api/trips/{id}/notes")
+    suspend fun updateTripNotes(
+        @Path("id") tripId: Long,
+        @Body request: NoteUpdateRequest
+    ): Response<Map<String, String>>
 }

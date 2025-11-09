@@ -3,54 +3,93 @@ package com.mak7chek.carexpenses.ui.screens.journal
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mak7chek.carexpenses.data.local.entities.TripEntity
+import com.mak7chek.carexpenses.data.local.entities.TripEntity // 👈 1. ПРАЦЮЄМО З ENTITY
+import com.mak7chek.carexpenses.data.local.entities.VehicleEntity
 import com.mak7chek.carexpenses.data.repository.TripRepository
+import com.mak7chek.carexpenses.data.repository.VehicleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
+
 data class JournalUiState(
     val trips: List<TripEntity> = emptyList(),
+    val vehicles: List<VehicleEntity> = emptyList(),
+
+    val searchQuery: String = "",
+    val selectedVehicleId: Long? = null,
+    val dateFrom: LocalDate? = null,
+    val dateTo: LocalDate? = null,
+    val minDistance: String = "",
+    val maxDistance: String = "",
+
     val isLoading: Boolean = false,
     val loadErrorMessage: String? = null
 )
 
 @HiltViewModel
 class JournalViewModel @Inject constructor(
-    private val tripRepository: TripRepository
+    private val tripRepository: TripRepository,
+    private val vehicleRepository: VehicleRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(JournalUiState())
     val uiState = _uiState.asStateFlow()
+
     private val _userMessage = MutableSharedFlow<String>()
     val userMessage = _userMessage.asSharedFlow()
 
+    private var filterJob: Job? = null
+
     init {
         viewModelScope.launch {
-            tripRepository.allTrips.collect { tripList ->
-                _uiState.update { it.copy(trips = tripList) }
+            vehicleRepository.allVehicles.collect { vehicles ->
+                _uiState.update { it.copy(vehicles = vehicles) }
             }
         }
-        refreshTrips()
+
+        viewModelScope.launch {
+            tripRepository.allTrips.collect { tripsFromRoom ->
+                _uiState.update { it.copy(trips = tripsFromRoom) }
+            }
+        }
+
+        applyFilters()
     }
 
-    fun refreshTrips() {
-        viewModelScope.launch {
+    fun onSearchQueryChange(query: String) { _uiState.update { it.copy(searchQuery = query) } }
+    fun onVehicleSelected(id: Long?) { _uiState.update { it.copy(selectedVehicleId = id) } }
+    fun onMinDistanceChange(dist: String) { _uiState.update { it.copy(minDistance = dist) } }
+    fun onMaxDistanceChange(dist: String) { _uiState.update { it.copy(maxDistance = dist) } }
+    fun onDateFromChange(date: LocalDate?) { _uiState.update { it.copy(dateFrom = date) } }
+    fun onDateToChange(date: LocalDate?) { _uiState.update { it.copy(dateTo = date) } }
+    // ---------------------------------------------------
+
+    fun applyFilters() {
+        filterJob?.cancel()
+        filterJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, loadErrorMessage = null) }
+
+            delay(300)
+
+            val state = _uiState.value
             try {
-                tripRepository.refreshTrips()
+                tripRepository.refreshAndFilterTrips(
+                    search = state.searchQuery.takeIf { it.isNotBlank() },
+                    vehicleId = state.selectedVehicleId,
+                    dateFrom = state.dateFrom,
+                    dateTo = state.dateTo,
+                    minDistance = state.minDistance.toDoubleOrNull(),
+                    maxDistance = state.maxDistance.toDoubleOrNull()
+                )
                 _uiState.update { it.copy(isLoading = false) }
             } catch (e: Exception) {
                 e.printStackTrace()
                 _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        loadErrorMessage = "Не вдалося завантажити журнал"
-                    )
+                    it.copy(isLoading = false, loadErrorMessage = "Не вдалося завантажити журнал")
                 }
             }
         }
@@ -60,12 +99,11 @@ class JournalViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 tripRepository.delete(trip.id)
+                _userMessage.emit("Поїздку #${trip.id} видалено")
             } catch (e: Exception) {
                 e.printStackTrace()
                 _userMessage.emit("Не вдалося видалити поїздку")
             }
         }
     }
-
-
 }

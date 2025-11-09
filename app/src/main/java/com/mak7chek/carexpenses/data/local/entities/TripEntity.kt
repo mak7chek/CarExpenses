@@ -10,5 +10,7 @@ data class TripEntity(
     val endTime: String?,
     val totalDistanceKm: Double?,
     val totalFuelConsumedL: Double?,
-    val vehicleId: Long
+    val vehicleId: Long,
+    val vehicleName: String,
+    val notes: String?
 )

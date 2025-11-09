@@ -27,6 +27,7 @@ import com.mak7chek.carexpenses.ui.screens.auth.AuthScreen
 import com.mak7chek.carexpenses.ui.screens.journal.TripDetailScreen
 import com.mak7chek.carexpenses.ui.screens.settings.UpdateNameScreen
 import com.mak7chek.carexpenses.ui.screens.settings.UpdatePasswordScreen
+import com.mak7chek.carexpenses.ui.screens.settings.fuelprices.FuelPricesScreen
 import com.mak7chek.carexpenses.ui.screens.vehicles.AddVehicleScreen
 import com.mak7chek.carexpenses.ui.screens.vehicles.EditVehicleScreen
 import com.mak7chek.carexpenses.ui.splash.SplashScreen
@@ -143,6 +144,9 @@ class MainActivity : ComponentActivity() {
 
                         composable(route = Routes.UPDATE_PASSWORD) {
                             UpdatePasswordScreen(navController = navController)
+                        }
+                        composable(route = Routes.FUEL_PRICES) {
+                            FuelPricesScreen(navController = navController)
                         }
                     }
                 }

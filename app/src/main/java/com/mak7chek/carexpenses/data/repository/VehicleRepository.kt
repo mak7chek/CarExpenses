@@ -40,7 +40,8 @@ class VehicleRepository @Inject constructor(
                     make = response.make,
                     model = response.model,
                     year = response.year,
-                    avgConsumptionLitersPer100Km = response.avgConsumptionLitersPer100Km
+                    avgConsumptionLitersPer100Km = response.avgConsumptionLitersPer100Km,
+                    fuelType = response.fuelType
                 )
             }
 

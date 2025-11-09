@@ -1,10 +1,10 @@
 package com.mak7chek.carexpenses.data.dto
 
+
 data class TripStartRequest(
     val vehicleId: Long
 )
 
-// Точка для відправки на бекенд
 data class LocationPointRequest(
     val latitude: Double,
     val longitude: Double,
@@ -15,7 +15,6 @@ data class TrackBatchRequest(
     val points: List<LocationPointRequest>
 )
 
-// Точка, яку ми отримуємо від бекенда
 data class LocationPointResponse(
     val id: Long,
     val latitude: Double,
@@ -31,5 +30,26 @@ data class TripResponse(
     val totalFuelConsumedL: Double?,
     val vehicleId: Long,
     val vehicleName: String,
+    val notes: String?
+)
+
+data class TripDetailResponse(
+    val id: Long,
+    val startTime: String,
+    val endTime: String?,
+    val notes: String?,
+    val vehicleName: String,
+    val fuelType: String,
+
+    val totalDistanceKm: Double,
+    val avgConsumption: Double,
+    val totalFuelConsumedL: Double,
+    val pricePerLiter: Double,
+    val totalCost: Double,
+
     val routePoints: List<LocationPointResponse>
+)
+
+data class NoteUpdateRequest(
+    val notes: String?
 )
