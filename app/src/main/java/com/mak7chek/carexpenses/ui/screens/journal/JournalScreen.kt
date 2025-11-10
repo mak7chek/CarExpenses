@@ -202,7 +202,7 @@ fun FilterControls(
             },
             dismissButton = {
                 TextButton(onClick = {
-                    viewModel.onDateFromChange(null) // Очистити дату
+                    viewModel.onDateFromChange(null)
                     showFromDialog = false
                 }) { Text("Очистити") }
             }
@@ -248,12 +248,22 @@ fun FilterControls(
             singleLine = true,
             leadingIcon = { Icon(Icons.Default.Search, null) },
             trailingIcon = {
-                IconButton(onClick = onToggleFilters) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_filter),
-                        contentDescription = "Фільтри",
-                        tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Row {
+                    IconButton(onClick = viewModel::onExportClicked) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_download),
+                            contentDescription = "Експорт в CSV",
+                            tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    IconButton(onClick = onToggleFilters) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_filter),
+                            contentDescription = "Фільтри",
+                            tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         )
@@ -322,7 +332,7 @@ fun FilterControls(
                 OutlinedTextField(
                     value = uiState.dateFrom?.toString() ?: "",
                     onValueChange = {},
-                    label = { Text("З (Дата)") },
+                    label = { Text("З") },
                     readOnly = true,
                     trailingIcon = {
                         IconButton(onClick = { showFromDialog = true }) {
@@ -337,7 +347,7 @@ fun FilterControls(
                 OutlinedTextField(
                     value = uiState.dateTo?.toString() ?: "",
                     onValueChange = {},
-                    label = { Text("До (Дата)") },
+                    label = { Text("До") },
                     readOnly = true,
                     trailingIcon = {
                         IconButton(onClick = { showToDialog = true }) {

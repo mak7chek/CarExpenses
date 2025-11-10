@@ -99,6 +99,7 @@ fun SettingsScreen(
             item { SectionHeader("Вигляд та Дані") }
             item {
                 SettingItem(
+                    iconPainter = painterResource(id = R.drawable.ic_petrol),
                     title = "Ціни на паливо",
                     subtitle = "Редагувати ваші ціни для розрахунків",
                     onClick = onNavigateToFuelPrices

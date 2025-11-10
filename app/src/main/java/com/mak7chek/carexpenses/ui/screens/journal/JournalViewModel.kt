@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
-
+import com.mak7chek.carexpenses.data.DownloaderService
+import com.mak7chek.carexpenses.data.repository.AuthRepository
+import kotlinx.coroutines.flow.firstOrNull
 data class JournalUiState(
     val trips: List<TripEntity> = emptyList(),
     val vehicles: List<VehicleEntity> = emptyList(),
@@ -33,7 +35,9 @@ data class JournalUiState(
 @HiltViewModel
 class JournalViewModel @Inject constructor(
     private val tripRepository: TripRepository,
-    private val vehicleRepository: VehicleRepository
+    private val vehicleRepository: VehicleRepository,
+    private val authRepository: AuthRepository,
+    private val downloaderService: DownloaderService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(JournalUiState())
@@ -105,5 +109,46 @@ class JournalViewModel @Inject constructor(
                 _userMessage.emit("Не вдалося видалити поїздку")
             }
         }
+    }
+
+    fun onExportClicked() {
+        viewModelScope.launch {
+            val token = authRepository.checkCurrentToken().firstOrNull()
+            if (token == null) {
+                _userMessage.emit("Помилка: Ви не авторизовані")
+                return@launch
+            }
+
+            val query = buildFilterQuery()
+
+            downloaderService.downloadTripsReport(token, query)
+
+            _userMessage.emit("Завантаження звіту почалося...")
+        }
+    }
+    private fun buildFilterQuery(): String {
+        val state = _uiState.value
+        val params = mutableListOf<String>()
+
+        state.searchQuery.takeIf { it.isNotBlank() }?.let {
+            params.add("search=$it")
+        }
+        state.selectedVehicleId?.let {
+            params.add("vehicleId=$it")
+        }
+        state.dateFrom?.let {
+            params.add("dateFrom=$it")
+        }
+        state.dateTo?.let {
+            params.add("dateTo=$it")
+        }
+        state.minDistance.toDoubleOrNull()?.let {
+            params.add("minDistance=$it")
+        }
+        state.maxDistance.toDoubleOrNull()?.let {
+            params.add("maxDistance=$it")
+        }
+
+        return if (params.isEmpty()) "" else params.joinToString(prefix = "?", separator = "&")
     }
 }
